@@ -105,6 +105,44 @@ def view_weather():
 
 # ==================== API ENDPOINTS ====================
 
+@app.route("/api/test-gemini")
+def test_gemini():
+    """Debug endpoint to diagnose Gemini API issues."""
+    import requests as req
+    api_key = os.getenv("GEMINI_API_KEY")
+
+    if not api_key:
+        return jsonify({"status": "ERROR", "message": "GEMINI_API_KEY is NOT set in environment variables!"})
+
+    masked_key = api_key[:8] + "..." + api_key[-4:] if len(api_key) > 12 else "TOO_SHORT"
+
+    models = ["gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-2.0-flash"]
+    results = {}
+
+    for model in models:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+        try:
+            r = req.post(
+                url,
+                headers={"Content-Type": "application/json"},
+                params={"key": api_key},
+                json={"contents": [{"role": "user", "parts": [{"text": "Say hi"}]}]},
+                timeout=15
+            )
+            if r.status_code == 200:
+                results[model] = "✅ WORKING"
+            else:
+                body = r.json()
+                results[model] = f"❌ {r.status_code} - {body.get('error', {}).get('message', 'Unknown error')}"
+        except Exception as e:
+            results[model] = f"❌ Exception: {str(e)[:100]}"
+
+    return jsonify({
+        "api_key_prefix": masked_key,
+        "key_length": len(api_key),
+        "model_results": results
+    })
+
 @app.route("/api/places")
 def api_places():
     city = request.args.get("city", "").strip()
