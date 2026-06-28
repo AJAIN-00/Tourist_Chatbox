@@ -107,7 +107,7 @@ def view_weather():
 
 @app.route("/api/test-gemini")
 def test_gemini():
-    """Debug endpoint to diagnose Gemini API issues."""
+    """Debug endpoint to list all available Gemini models for the configured key."""
     import requests as req
     api_key = os.getenv("GEMINI_API_KEY")
 
@@ -116,31 +116,34 @@ def test_gemini():
 
     masked_key = api_key[:8] + "..." + api_key[-4:] if len(api_key) > 12 else "TOO_SHORT"
 
-    models = ["gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-2.0-flash"]
     results = {}
+    
+    # Try retrieving models from v1beta
+    try:
+        url_beta = "https://generativelanguage.googleapis.com/v1beta/models"
+        r_beta = req.get(url_beta, params={"key": api_key}, timeout=15)
+        if r_beta.status_code == 200:
+            results["v1beta_models"] = [m.get("name") for m in r_beta.json().get("models", [])]
+        else:
+            results["v1beta_error"] = f"{r_beta.status_code} - {r_beta.text}"
+    except Exception as e:
+        results["v1beta_exception"] = str(e)
 
-    for model in models:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
-        try:
-            r = req.post(
-                url,
-                headers={"Content-Type": "application/json"},
-                params={"key": api_key},
-                json={"contents": [{"role": "user", "parts": [{"text": "Say hi"}]}]},
-                timeout=15
-            )
-            if r.status_code == 200:
-                results[model] = "✅ WORKING"
-            else:
-                body = r.json()
-                results[model] = f"❌ {r.status_code} - {body.get('error', {}).get('message', 'Unknown error')}"
-        except Exception as e:
-            results[model] = f"❌ Exception: {str(e)[:100]}"
+    # Try retrieving models from v1
+    try:
+        url_v1 = "https://generativelanguage.googleapis.com/v1/models"
+        r_v1 = req.get(url_v1, params={"key": api_key}, timeout=15)
+        if r_v1.status_code == 200:
+            results["v1_models"] = [m.get("name") for m in r_v1.json().get("models", [])]
+        else:
+            results["v1_error"] = f"{r_v1.status_code} - {r_v1.text}"
+    except Exception as e:
+        results["v1_exception"] = str(e)
 
     return jsonify({
         "api_key_prefix": masked_key,
         "key_length": len(api_key),
-        "model_results": results
+        "results": results
     })
 
 @app.route("/api/places")
