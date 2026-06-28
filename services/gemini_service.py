@@ -26,15 +26,27 @@ def chat_with_gemini(message, session_id=None):
         )
 
     try:
-        # Using gemini-1.5-flash for fast responses and support for system_instruction
-        model = genai.GenerativeModel(
-            model_name="gemini-1.5-flash",
-            system_instruction=SYSTEM_INSTRUCTION
-        )
-        
-        response = model.generate_content(message)
-        return response.text
+        # Try primary model: gemini-1.5-flash
+        try:
+            model = genai.GenerativeModel(
+                model_name="gemini-1.5-flash",
+                system_instruction=SYSTEM_INSTRUCTION
+            )
+            response = model.generate_content(message)
+            return response.text
+        except Exception as e:
+            if "not found" in str(e).lower() or "not supported" in str(e).lower():
+                print(f"gemini-1.5-flash failed: {e}. Trying legacy gemini-pro...")
+                # Fallback model: gemini-pro (does not support system_instruction as parameter in some versions)
+                model = genai.GenerativeModel(model_name="gemini-pro")
+                # Prepend the system instruction to the message since gemini-pro doesn't support system_instruction parameter
+                prompt = f"{SYSTEM_INSTRUCTION}\n\nUser: {message}"
+                response = model.generate_content(prompt)
+                return response.text
+            else:
+                raise e
     except Exception as e:
+        print(f"All Gemini models failed: {e}")
         return f"Error communicating with AI guide: {str(e)}"
 
 def generate_itinerary_prompt(city, days):
@@ -52,14 +64,25 @@ def generate_itinerary_ai(city, days):
         return get_fallback_itinerary(city, days)
 
     try:
-        model = genai.GenerativeModel(
-            model_name="gemini-1.5-flash",
-            system_instruction="You are a professional travel itinerary planner for Tamil Nadu."
-        )
-        prompt = generate_itinerary_prompt(city, days)
-        response = model.generate_content(prompt)
-        return response.text
+        try:
+            model = genai.GenerativeModel(
+                model_name="gemini-1.5-flash",
+                system_instruction="You are a professional travel itinerary planner for Tamil Nadu."
+            )
+            prompt = generate_itinerary_prompt(city, days)
+            response = model.generate_content(prompt)
+            return response.text
+        except Exception as e:
+            if "not found" in str(e).lower() or "not supported" in str(e).lower():
+                print(f"gemini-1.5-flash failed for itinerary: {e}. Trying legacy gemini-pro...")
+                model = genai.GenerativeModel(model_name="gemini-pro")
+                prompt = f"You are a professional travel itinerary planner for Tamil Nadu.\n\n{generate_itinerary_prompt(city, days)}"
+                response = model.generate_content(prompt)
+                return response.text
+            else:
+                raise e
     except Exception as e:
+        print(f"All Gemini models failed for itinerary: {e}")
         return f"Failed to generate itinerary using AI: {str(e)}\n\n---\n\n" + get_fallback_itinerary(city, days)
 
 def get_fallback_itinerary(city, days):
