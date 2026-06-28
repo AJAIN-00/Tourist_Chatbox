@@ -107,7 +107,7 @@ def view_weather():
 
 @app.route("/api/test-gemini")
 def test_gemini():
-    """Debug endpoint to list all available Gemini models for the configured key."""
+    """Debug endpoint to check generateContent for allowed models."""
     import requests as req
     api_key = os.getenv("GEMINI_API_KEY")
 
@@ -116,29 +116,29 @@ def test_gemini():
 
     masked_key = api_key[:8] + "..." + api_key[-4:] if len(api_key) > 12 else "TOO_SHORT"
 
+    # We will test the models that exist in the key's list
+    models = ["gemini-2.0-flash", "gemini-3.5-flash", "gemini-1.5-flash"]
+    versions = ["v1", "v1beta"]
     results = {}
-    
-    # Try retrieving models from v1beta
-    try:
-        url_beta = "https://generativelanguage.googleapis.com/v1beta/models"
-        r_beta = req.get(url_beta, params={"key": api_key}, timeout=15)
-        if r_beta.status_code == 200:
-            results["v1beta_models"] = [m.get("name") for m in r_beta.json().get("models", [])]
-        else:
-            results["v1beta_error"] = f"{r_beta.status_code} - {r_beta.text}"
-    except Exception as e:
-        results["v1beta_exception"] = str(e)
 
-    # Try retrieving models from v1
-    try:
-        url_v1 = "https://generativelanguage.googleapis.com/v1/models"
-        r_v1 = req.get(url_v1, params={"key": api_key}, timeout=15)
-        if r_v1.status_code == 200:
-            results["v1_models"] = [m.get("name") for m in r_v1.json().get("models", [])]
-        else:
-            results["v1_error"] = f"{r_v1.status_code} - {r_v1.text}"
-    except Exception as e:
-        results["v1_exception"] = str(e)
+    for model in models:
+        results[model] = {}
+        for version in versions:
+            url = f"https://generativelanguage.googleapis.com/{version}/models/{model}:generateContent"
+            try:
+                r = req.post(
+                    url,
+                    headers={"Content-Type": "application/json"},
+                    params={"key": api_key},
+                    json={"contents": [{"role": "user", "parts": [{"text": "Hello, answer in 2 words"}]}]},
+                    timeout=15
+                )
+                if r.status_code == 200:
+                    results[model][version] = "✅ " + r.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+                else:
+                    results[model][version] = f"❌ {r.status_code} - {r.text}"
+            except Exception as e:
+                results[model][version] = f"❌ Exception: {str(e)[:100]}"
 
     return jsonify({
         "api_key_prefix": masked_key,
