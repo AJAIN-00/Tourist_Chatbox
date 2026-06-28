@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Local Weather & Travel Alerts - Tamil Nadu Guide{% endblock %}
+
+{% block content %}
+<div class="container py-5" id="weatherPageContainer">
+    <div class="row text-center mb-5">
+        <div class="col-12">
+            <h1 class="heading-serif mb-2 text-white" id="weatherHeadline">Live Weather Sights & Recommendations</h1>
+            <p class="text-muted" id="weatherSubtitle">Check temperatures, humidity levels, and seasonal advice</p>
+        </div>
+    </div>
+
+    <!-- Weather cards loading grid (hydrated via JS inside main.js) -->
+    <div class="row mb-5" id="weatherContainer">
+        <!-- Skeleton Loaders default state -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="glass-card p-4">
+                <div class="skeleton-line" style="width: 50%;"></div>
+                <div class="skeleton-line" style="width: 30%; height: 35px; margin: 15px 0;"></div>
+                <div class="skeleton-line" style="width: 70%;"></div>
+                <div class="skeleton-line" style="width: 90%;"></div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="glass-card p-4">
+                <div class="skeleton-line" style="width: 50%;"></div>
+                <div class="skeleton-line" style="width: 30%; height: 35px; margin: 15px 0;"></div>
+                <div class="skeleton-line" style="width: 70%;"></div>
+                <div class="skeleton-line" style="width: 90%;"></div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="glass-card p-4">
+                <div class="skeleton-line" style="width: 50%;"></div>
+                <div class="skeleton-line" style="width: 30%; height: 35px; margin: 15px 0;"></div>
+                <div class="skeleton-line" style="width: 70%;"></div>
+                <div class="skeleton-line" style="width: 90%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emergency Information Section -->
+    <div class="row text-center mb-4 mt-5">
+        <div class="col-12">
+            <h2 class="heading-serif mb-2 text-white" id="emergencyHeadline">Emergency & Security Support Contacts</h2>
+            <p class="text-muted" id="emergencySubtitle">Police departments, rescue ambulances, and district hospitals per city</p>
+        </div>
+    </div>
+    
+    <div class="emergency-grid" id="emergencyContactsGrid">
+        <!-- Chennai Emergency Card -->
+        <div class="glass-card p-4 emergency-card" id="emergencyCardChennai">
+            <h3 class="h5 text-white mb-3 border-bottom pb-2">🏙️ Chennai</h3>
+            <div class="d-flex flex-column gap-3">
+                <div class="d-flex gap-3 align-items-center">
+                    <div class="fs-4 text-danger"><i class="bi bi-shield-fill-x"></i></div>
+                    <div>
+                        <div class="text-muted" style="font-size: 0.75rem; text-transform: uppercase;">Police Support</div>
+                        <div class="text-white" style="font-size: 0.95rem;">100 (044-23452345)</div>
+                    </div>
+                </div>
+                <div class="d-flex gap-3 align-items-center">
+                    <div class="fs-4 text-success"><i class="bi bi-hospital-fill"></i></div>
+                    <div>
+                        <div class="text-muted" style="font-size: 0.75rem; text-transform: uppercase;">Ambulance / Medical</div>
+                        <div class="text-white" style="font-size: 0.95rem;">108 (State Helpline)</div>
+                    </div>
+                </div>
+                <div class="d-flex gap-3 align-items-center">
+                    <div class="fs-4 text-warning"><i class="bi bi-fire"></i></div>
+                    <div>
+                        <div class="text-muted" style="font-size: 0.75rem; text-transform: uppercase;">Fire Rescue</div>
+                        <div class="text-white" style="font-size: 0.95rem;">101</div>
+                    </div>
+                </div>
+                <div class="d-flex gap-3 align-items-center border-top pt-2">
+                    <div class="fs-4 text-info"><i class="bi bi-geo-alt-fill"></i></div>
+                    <div>
+                        <div class="text-muted" style="font-size: 0.75rem; text-transform: uppercase;">District Hospital</div>
+                        <div class="text-white" style="font-size: 0.88rem; line-height: 1.3;">Rajiv Gandhi General Hospital (044-25305000)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coimbatore Emergency Card -->
+        <div class="glass-card p-4 emergency-card" id="emergencyCardCoimbatore">
+            <h3 class="h5 text-white mb-3 border-bottom pb-2">🕉️ Coimbatore</h3>
+            <div class="d-flex flex-column gap-3">
+                <div class="d-flex gap-3 align-items-center">
+                    <div class="fs-4 text-danger"><i class="bi bi-shield-fill-x"></i></div>
+                    <div>
+                        <div class="text-muted" style="font-size: 0.75rem; text-transform: uppercase;">Police Support</div>
+                        <div class="text-white" style="font-size: 0.95rem;">100 (0422-2300600)</div>
+                    </div>
+                </div>
+                <div class="d-flex gap-3 align-items-center">
+                    <div class="fs-4 text-success"><i class="bi bi-hospital-fill"></i></div>
+                    <div>
+                        <div class="text-muted" style="font-size: 0.75rem; text-transform: uppercase;">Ambulance / Medical</div>
+                        <div class="text-white" style="font-size: 0.95rem;">108 (State Helpline)</div>
+                    </div>
+                </div>
+                <div class="d-flex gap-3 align-items-center">
+                    <div class="fs-4 text-warning"><i class="bi bi-fire"></i></div>
+                    <div>
+                        <div class="text-muted" style="font-size: 0.75rem; text-transform: uppercase;">Fire Rescue</div>
+                        <div class="text-white" style="font-size: 0.95rem;">101</div>
+                    </div>
+                </div>
+                <div class="d-flex gap-3 align-items-center border-top pt-2">
+                    <div class="fs-4 text-info"><i class="bi bi-geo-alt-fill"></i></div>
+                    <div>
+                        <div class="text-muted" style="font-size: 0.75rem; text-transform: uppercase;">District Hospital</div>
+                        <div class="text-white" style="font-size: 0.88rem; line-height: 1.3;">Government Medical College and Hospital (0422-2301393)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kanyakumari Emergency Card -->
+        <div class="glass-card p-4 emergency-card" id="emergencyCardKanyakumari">
+            <h3 class="h5 text-white mb-3 border-bottom pb-2">🌊 Kanyakumari</h3>
+            <div class="d-flex flex-column gap-3">
+                <div class="d-flex gap-3 align-items-center">
+                    <div class="fs-4 text-danger"><i class="bi bi-shield-fill-x"></i></div>
+                    <div>
+                        <div class="text-muted" style="font-size: 0.75rem; text-transform: uppercase;">Police Support</div>
+                        <div class="text-white" style="font-size: 0.95rem;">100 (04652-220100)</div>
+                    </div>
+                </div>
+                <div class="d-flex gap-3 align-items-center">
+                    <div class="fs-4 text-success"><i class="bi bi-hospital-fill"></i></div>
+                    <div>
+                        <div class="text-muted" style="font-size: 0.75rem; text-transform: uppercase;">Ambulance / Medical</div>
+                        <div class="text-white" style="font-size: 0.95rem;">108 (State Helpline)</div>
+                    </div>
+                </div>
+                <div class="d-flex gap-3 align-items-center">
+                    <div class="fs-4 text-warning"><i class="bi bi-fire"></i></div>
+                    <div>
+                        <div class="text-muted" style="font-size: 0.75rem; text-transform: uppercase;">Fire Rescue</div>
+                        <div class="text-white" style="font-size: 0.95rem;">101</div>
+                    </div>
+                </div>
+                <div class="d-flex gap-3 align-items-center border-top pt-2">
+                    <div class="fs-4 text-info"><i class="bi bi-geo-alt-fill"></i></div>
+                    <div>
+                        <div class="text-muted" style="font-size: 0.75rem; text-transform: uppercase;">District Hospital</div>
+                        <div class="text-white" style="font-size: 0.88rem; line-height: 1.3;">Headquarters Hospital, Nagercoil (04652-226050)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

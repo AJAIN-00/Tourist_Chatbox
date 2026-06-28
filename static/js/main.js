@@ -1,0 +1,447 @@
+// Tamil Nadu Smart Tourist Guide - Client Scripting
+
+document.addEventListener("DOMContentLoaded", () => {
+    // 1. Dark Mode Toggle & Initialization
+    initDarkMode();
+    
+    // 2. Main Page Specific Initializations
+    if (document.getElementById("placesSearchInput")) {
+        initPlacesSearch();
+    }
+    
+    if (document.getElementById("chatMessages")) {
+        initChatbot();
+    }
+    
+    if (document.getElementById("weatherContainer")) {
+        initWeatherDashboard();
+    }
+    
+    if (document.getElementById("itineraryForm")) {
+        initItineraryPlanner();
+    }
+    
+    if (document.getElementById("qrcode")) {
+        initQRCodeGenerator();
+    }
+});
+
+// ==================== 1. DARK MODE ====================
+function initDarkMode() {
+    const toggleBtn = document.getElementById("darkModeToggle");
+    if (!toggleBtn) return;
+    
+    // Check local storage or system preference
+    const savedTheme = localStorage.getItem("theme");
+    const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    
+    if (savedTheme === "light" || (!savedTheme && !systemPrefersDark)) {
+        document.body.classList.add("light-mode");
+        toggleBtn.innerHTML = '<i class="bi bi-sun-fill text-warning"></i>';
+    } else {
+        document.body.classList.remove("light-mode");
+        toggleBtn.innerHTML = '<i class="bi bi-moon-stars-fill text-primary"></i>';
+    }
+    
+    toggleBtn.addEventListener("click", () => {
+        document.body.classList.toggle("light-mode");
+        const isLight = document.body.classList.contains("light-mode");
+        localStorage.setItem("theme", isLight ? "light" : "dark");
+        
+        if (isLight) {
+            toggleBtn.innerHTML = '<i class="bi bi-sun-fill text-warning"></i>';
+        } else {
+            toggleBtn.innerHTML = '<i class="bi bi-moon-stars-fill text-primary"></i>';
+        }
+    });
+}
+
+// ==================== 2. PLACES SEARCH & FILTER ====================
+function initPlacesSearch() {
+    const searchInput = document.getElementById("placesSearchInput");
+    const cards = document.querySelectorAll(".place-grid-card");
+    
+    searchInput.addEventListener("input", (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        
+        cards.forEach(card => {
+            const name = card.getAttribute("data-name").toLowerCase();
+            const desc = card.getAttribute("data-desc").toLowerCase();
+            
+            if (name.includes(query) || desc.includes(query)) {
+                card.style.display = "";
+            } else {
+                card.style.display = "none";
+            }
+        });
+    });
+}
+
+// ==================== 3. CHATBOT AND SPEECH API ====================
+function initChatbot() {
+    const chatInput = document.getElementById("chatInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const chatMessages = document.getElementById("chatMessages");
+    const voiceBtn = document.getElementById("voiceBtn");
+    const langSelect = document.getElementById("chatLanguageSelect");
+    
+    if (!chatInput || !sendBtn || !chatMessages) return;
+
+    // Send Message Trigger
+    const triggerSendMessage = () => {
+        const text = chatInput.value.trim();
+        if (!text) return;
+        
+        appendChatMessage("user", text);
+        chatInput.value = "";
+        
+        // Show Typing Indicator
+        const typingIndicator = appendTypingIndicator();
+        
+        // Call API
+        fetch("/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                message: text,
+                language: langSelect ? langSelect.value : "en"
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            typingIndicator.remove();
+            if (data.error) {
+                appendChatMessage("bot", "Sorry, I encountered an issue. " + data.error);
+            } else {
+                appendChatMessage("bot", data.response);
+            }
+        })
+        .catch(err => {
+            typingIndicator.remove();
+            appendChatMessage("bot", "Connection failed. Please check your internet connection.");
+            console.error(err);
+        });
+    };
+
+    sendBtn.addEventListener("click", triggerSendMessage);
+    chatInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            triggerSendMessage();
+        }
+    });
+
+    // Web Speech API (Voice Input)
+    if (voiceBtn && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        
+        // Determine lang preference
+        recognition.onstart = () => {
+            voiceBtn.classList.add("active");
+            voiceBtn.innerHTML = '<i class="bi bi-mic-fill"></i>';
+        };
+        
+        recognition.onend = () => {
+            voiceBtn.classList.remove("active");
+            voiceBtn.innerHTML = '<i class="bi bi-mic"></i>';
+        };
+        
+        recognition.onresult = (e) => {
+            const speechResult = e.results[0][0].transcript;
+            chatInput.value = speechResult;
+            chatInput.focus();
+        };
+        
+        recognition.onerror = (e) => {
+            console.error("Speech Recognition Error:", e.error);
+            voiceBtn.classList.remove("active");
+            voiceBtn.innerHTML = '<i class="bi bi-mic"></i>';
+        };
+
+        voiceBtn.addEventListener("click", () => {
+            // Pick language code
+            const langCode = langSelect ? langSelect.value : "en";
+            if (langCode === "ta") {
+                recognition.lang = "ta-IN";
+            } else if (langCode === "hi") {
+                recognition.lang = "hi-IN";
+            } else if (langCode === "te") {
+                recognition.lang = "te-IN";
+            } else {
+                recognition.lang = "en-IN";
+            }
+            recognition.start();
+        });
+    } else if (voiceBtn) {
+        // Remove or disable voice button if browser lacks support
+        voiceBtn.title = "Voice Input not supported in this browser";
+        voiceBtn.style.opacity = "0.5";
+        voiceBtn.style.cursor = "not-allowed";
+    }
+}
+
+function appendChatMessage(sender, text) {
+    const chatMessages = document.getElementById("chatMessages");
+    if (!chatMessages) return;
+    
+    const bubble = document.createElement("div");
+    bubble.className = `chat-bubble chat-bubble-${sender}`;
+    
+    // Convert newlines to breaks for readable layouts
+    bubble.innerHTML = text.replace(/\n/g, "<br>");
+    
+    chatMessages.appendChild(bubble);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function appendTypingIndicator() {
+    const chatMessages = document.getElementById("chatMessages");
+    const bubble = document.createElement("div");
+    bubble.className = "chat-bubble chat-bubble-bot";
+    bubble.innerHTML = `
+        <div class="d-flex gap-1 align-items-center" style="min-width: 50px; height: 20px;">
+            <div class="skeleton-line m-0" style="width: 10px; height: 10px; border-radius: 50%;"></div>
+            <div class="skeleton-line m-0" style="width: 10px; height: 10px; border-radius: 50%;"></div>
+            <div class="skeleton-line m-0" style="width: 10px; height: 10px; border-radius: 50%;"></div>
+        </div>
+    `;
+    chatMessages.appendChild(bubble);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    return bubble;
+}
+
+// ==================== 4. WEATHER DASHBOARD ====================
+function initWeatherDashboard() {
+    const weatherContainer = document.getElementById("weatherContainer");
+    const cities = ["chennai", "coimbatore", "kanyakumari"];
+    
+    weatherContainer.innerHTML = "";
+    
+    cities.forEach(city => {
+        // Append Skeleton Cards first
+        const skeletonCard = document.createElement("div");
+        skeletonCard.className = "col-lg-4 col-md-6 mb-4";
+        skeletonCard.id = `weather-card-${city}`;
+        skeletonCard.innerHTML = `
+            <div class="glass-card p-4">
+                <div class="skeleton-line" style="width: 50%;"></div>
+                <div class="skeleton-line" style="width: 30%; height: 35px; margin: 15px 0;"></div>
+                <div class="skeleton-line" style="width: 70%;"></div>
+                <div class="skeleton-line" style="width: 90%;"></div>
+                <div class="skeleton-line" style="width: 80%;"></div>
+            </div>
+        `;
+        weatherContainer.appendChild(skeletonCard);
+        
+        // Fetch weather
+        fetch(`/weather/${city}`)
+            .then(res => res.json())
+            .then(data => {
+                const card = document.getElementById(`weather-card-${city}`);
+                if (!card) return;
+                
+                let iconUrl = "";
+                if (data.icon) {
+                    iconUrl = `https://openweathermap.org/img/wn/${data.icon}@2x.png`;
+                }
+                
+                card.innerHTML = `
+                    <div class="glass-card p-4 h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h3 class="mb-0">${data.city}</h3>
+                                ${iconUrl ? `<img src="${iconUrl}" width="50" height="50" alt="${data.condition}">` : ""}
+                            </div>
+                            <div class="weather-main-temp mb-2">${data.temperature}</div>
+                            <div class="mb-3 text-capitalize font-weight-bold" style="color: var(--secondary)">
+                                <i class="bi bi-wind"></i> ${data.description} | Humidity: ${data.humidity}
+                            </div>
+                            <p class="text-muted" style="font-size: 0.92rem;">
+                                ${data.recommendation}
+                            </p>
+                        </div>
+                        ${data.is_mock ? '<div class="badge bg-warning text-dark mt-3 py-2">Demo Seasonal Weather</div>' : ''}
+                    </div>
+                `;
+            })
+            .catch(err => {
+                const card = document.getElementById(`weather-card-${city}`);
+                if (card) {
+                    card.innerHTML = `
+                        <div class="glass-card p-4">
+                            <h3 class="text-capitalize">${city}</h3>
+                            <p class="text-danger mt-3">Could not load weather info.</p>
+                        </div>
+                    `;
+                }
+                console.error(err);
+            });
+    });
+}
+
+// ==================== 5. ITINERARY PLANNER ====================
+function initItineraryPlanner() {
+    const form = document.getElementById("itineraryForm");
+    const resultDiv = document.getElementById("itineraryResult");
+    const pdfBtn = document.getElementById("downloadPdfBtn");
+    
+    if (!form || !resultDiv) return;
+    
+    form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        
+        const city = document.getElementById("citySelect").value;
+        const days = document.getElementById("daysSelect").value;
+        
+        // Show Skeletons
+        resultDiv.innerHTML = `
+            <div class="glass-card p-5">
+                <h3 class="mb-4">Planning your perfect trip to ${city}...</h3>
+                <div class="skeleton-line" style="width: 90%;"></div>
+                <div class="skeleton-line" style="width: 85%;"></div>
+                <div class="skeleton-line" style="width: 80%;"></div>
+                <div class="skeleton-line" style="width: 95%;"></div>
+                <div class="skeleton-line" style="width: 70%;"></div>
+                <div class="skeleton-line" style="width: 85%;"></div>
+            </div>
+        `;
+        
+        if (pdfBtn) pdfBtn.style.display = "none";
+        
+        fetch(`/itinerary/${city}/${days}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-danger">
+                            Error creating itinerary: ${data.error}
+                        </div>
+                    `;
+                } else {
+                    // Render Markdown style spacing (safe conversion for basic markdown headers/lists)
+                    const parsedHtml = formatMarkdown(data.itinerary);
+                    resultDiv.innerHTML = `
+                        <div class="glass-card p-4 p-md-5" id="itineraryPrintArea">
+                            <div class="d-flex justify-content-between align-items-start border-bottom pb-3 mb-4">
+                                <div>
+                                    <h2 class="heading-serif mb-1">${data.city} Travel Itinerary</h2>
+                                    <span class="badge bg-primary px-3 py-2">${data.days}-Day Plan</span>
+                                </div>
+                                <span class="text-muted" style="font-size: 0.85rem;">Generated by TN Smart Guide</span>
+                            </div>
+                            <div class="itinerary-md-body">
+                                ${parsedHtml}
+                            </div>
+                        </div>
+                    `;
+                    
+                    if (pdfBtn) {
+                        pdfBtn.style.display = "inline-flex";
+                        // Rebind click for the specific itinerary
+                        pdfBtn.onclick = () => {
+                            printItinerary(data.city, data.days);
+                        };
+                    }
+                }
+            })
+            .catch(err => {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        Connection issue. Could not connect to itinerary planner.
+                    </div>
+                `;
+                console.error(err);
+            });
+    });
+}
+
+function formatMarkdown(markdownText) {
+    // Basic regex formatting for headers, bold text and bullets
+    let html = markdownText
+        .replace(/^### (.*$)/gim, '<h4 class="mt-4 mb-2 heading-serif text-warning">$1</h4>')
+        .replace(/^## (.*$)/gim, '<h3 class="mt-4 mb-3 heading-serif border-bottom pb-2" style="color: var(--secondary);">$1</h3>')
+        .replace(/^# (.*$)/gim, '<h2 class="mb-4 heading-serif">$1</h2>')
+        .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+        .replace(/^\s*-\s*(.*$)/gim, '<li class="mb-2 text-muted">$1</li>');
+        
+    // Wrap lists in ul
+    // A simple parser check
+    html = html.replace(/(<li>.*<\/li>)/gim, '<ul>$1</ul>');
+    // Clean nested ul wraps
+    html = html.replace(/<\/ul>\s*<ul>/gim, '');
+    
+    // Replace newlines with breaks outside tags
+    return html.split("\n\n").map(para => {
+        if (para.trim().startsWith("<h") || para.trim().startsWith("<u")) {
+            return para;
+        }
+        return `<p class="text-muted">${para.replace(/\n/g, "<br>")}</p>`;
+    }).join("");
+}
+
+function printItinerary(city, days) {
+    const printContents = document.getElementById("itineraryPrintArea").innerHTML;
+    const originalContents = document.body.innerHTML;
+    
+    // Set up print stylesheet or custom document layout
+    const printWindow = window.open("", "_blank");
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>${city} ${days}-Day Itinerary</title>
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                <style>
+                    body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; color: #333; }
+                    .heading-serif { font-family: Georgia, serif; }
+                    .border-bottom { border-bottom: 2px solid #e63946 !important; }
+                    h3 { color: #d90429; margin-top: 30px; }
+                    h4 { color: #e76f51; }
+                    ul { padding-left: 20px; }
+                    li { margin-bottom: 8px; }
+                    p { font-size: 1.05rem; line-height: 1.6; }
+                    @media print {
+                        .no-print { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    ${printContents}
+                    <div class="mt-5 text-center text-muted border-top pt-3 no-print">
+                        <button class="btn btn-primary px-4 py-2" onclick="window.print()">Confirm Print / PDF</button>
+                    </div>
+                </div>
+            </body>
+        </html>
+    `);
+    printWindow.document.close();
+}
+
+// ==================== 6. QR CODE GENERATION ====================
+function initQRCodeGenerator() {
+    const qrDiv = document.getElementById("qrcode");
+    if (!qrDiv) return;
+    
+    // Load current page location
+    const currentUrl = window.location.href;
+    
+    try {
+        // Generates the QR Code inside the placeholder using qrcode.js loaded in template
+        new QRCode(qrDiv, {
+            text: currentUrl,
+            width: 130,
+            height: 130,
+            colorDark : "#0f172a",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H
+        });
+    } catch (e) {
+        console.error("QR Code generator failed to load library:", e);
+        qrDiv.innerHTML = '<span class="text-danger">Failed to generate QR Code.</span>';
+    }
+}

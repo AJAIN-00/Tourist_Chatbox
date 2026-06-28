@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}{{ place.name }} - Sights Details & Map Preview{% endblock %}
+
+{% block description %}{{ place.description[:160] }}{% endblock %}
+
+{% block content %}
+<div class="container py-5" id="placeDetailPage">
+    <!-- Breadcrumbs navigation -->
+    <nav aria-label="breadcrumb" class="mb-4" id="detailPageBreadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('home') }}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('view_places') }}">Explore Places</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('view_places') }}?city={{ place.city }}">{{ place.city }}</a></li>
+            <li class="breadcrumb-item active text-muted" aria-current="page">{{ place.name }}</li>
+        </ol>
+    </nav>
+
+    <!-- Headline and core details -->
+    <div class="row mb-5 g-4">
+        <div class="col-lg-8">
+            <span class="badge bg-danger px-3 py-2 mb-3"><i class="bi bi-geo-alt-fill"></i> {{ place.city }}</span>
+            <h1 class="heading-serif mb-4 text-white" id="placeNameText">{{ place.name }}</h1>
+            
+            <!-- Core Specs Grid -->
+            <div class="row g-3 mb-4">
+                <div class="col-sm-6">
+                    <div class="glass-card p-3 d-flex align-items-center gap-3" id="specCardEntry">
+                        <div class="fs-3 text-danger"><i class="bi bi-ticket-perforated"></i></div>
+                        <div>
+                            <div class="text-muted" style="font-size: 0.8rem; text-transform: uppercase;">Entry Fee</div>
+                            <div class="font-weight-bold text-white">{{ place.entry_fee }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="glass-card p-3 d-flex align-items-center gap-3" id="specCardTiming">
+                        <div class="fs-3 text-warning"><i class="bi bi-clock"></i></div>
+                        <div>
+                            <div class="text-muted" style="font-size: 0.8rem; text-transform: uppercase;">Timings</div>
+                            <div class="font-weight-bold text-white">{{ place.opening_time }}{% if place.closing_time and place.closing_time != place.opening_time %} – {{ place.closing_time }}{% endif %}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="glass-card p-3 d-flex align-items-center gap-3" id="specCardSeason">
+                        <div class="fs-3 text-success"><i class="bi bi-calendar-check"></i></div>
+                        <div>
+                            <div class="text-muted" style="font-size: 0.8rem; text-transform: uppercase;">Best Season</div>
+                            <div class="font-weight-bold text-white">{{ place.best_season }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="glass-card p-3 d-flex align-items-center gap-3" id="specCardCoords">
+                        <div class="fs-3 text-info"><i class="bi bi-compass"></i></div>
+                        <div>
+                            <div class="text-muted" style="font-size: 0.8rem; text-transform: uppercase;">Coordinates</div>
+                            <div class="font-weight-bold text-white" style="font-size: 0.95rem;">{{ place.latitude }}, {{ place.longitude }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Description -->
+            <div class="glass-card p-4 p-md-5 mb-4" id="placeDescriptionCard">
+                <h2 class="h4 text-white mb-3 heading-serif border-bottom pb-2">About The Sight</h2>
+                <p class="text-muted" style="font-size: 1.03rem; line-height: 1.7;">
+                    {{ place.description }}
+                </p>
+            </div>
+            
+            <!-- History -->
+            <div class="glass-card p-4 p-md-5" id="placeHistoryCard">
+                <h2 class="h4 text-white mb-3 heading-serif border-bottom pb-2">Historical Significance</h2>
+                <p class="text-muted" style="font-size: 1.03rem; line-height: 1.7;">
+                    {{ place.history }}
+                </p>
+            </div>
+        </div>
+        
+        <!-- Sidebar Widget Column -->
+        <div class="col-lg-4">
+            <!-- Map Card -->
+            <div class="glass-card p-4 mb-4 text-center" id="placeMapCard">
+                <h3 class="h5 text-white mb-3 text-start"><i class="bi bi-map me-2"></i> Location Map</h3>
+                <div class="ratio ratio-4x3 rounded overflow-hidden border" style="border-color: var(--border) !important;">
+                    <iframe src="{{ map_url }}" allowfullscreen="" loading="lazy"></iframe>
+                </div>
+                <a href="{{ directions_url }}" target="_blank" class="btn btn-premium mt-3 w-100" id="getDirectionsBtn">
+                    <i class="bi bi-cursor-fill"></i> Get Directions Link
+                </a>
+            </div>
+            
+            <!-- QR Code Card -->
+            <div class="glass-card p-4 mb-4 text-center" id="placeQrCard">
+                <h3 class="h5 text-white mb-2 text-start"><i class="bi bi-qr-code me-2"></i> Mobile Scan Code</h3>
+                <p class="text-muted text-start" style="font-size: 0.88rem;">Scan this QR code on your mobile device to open this guide page instantly.</p>
+                <div class="qr-container my-3" id="qrcode" style="padding: 10px; background: white; width: fit-content; margin: 0 auto; border-radius: 8px;"></div>
+            </div>
+            
+            <!-- Nearby Info Card -->
+            <div class="glass-card p-4" id="placeNearbyCard">
+                <h3 class="h5 text-white mb-3"><i class="bi bi-list-stars me-2"></i> Nearby Sights & Services</h3>
+                
+                <div class="mb-3">
+                    <div class="text-secondary font-weight-bold mb-1" style="font-size: 0.85rem; text-transform: uppercase;">Attractions</div>
+                    <p class="text-muted" style="font-size: 0.95rem;">{{ place.nearby_attractions }}</p>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="text-secondary font-weight-bold mb-1" style="font-size: 0.85rem; text-transform: uppercase;">Restaurants</div>
+                    <p class="text-muted" style="font-size: 0.95rem;">{{ place.nearby_restaurants }}</p>
+                </div>
+                
+                <div>
+                    <div class="text-secondary font-weight-bold mb-1" style="font-size: 0.85rem; text-transform: uppercase;">Hotels & Stays</div>
+                    <p class="text-muted" style="font-size: 0.95rem;">{{ place.nearby_hotels }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

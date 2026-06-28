@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}{{ action }} Attraction - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container py-5" id="adminPlaceFormPage">
+    <div class="row align-items-center mb-4">
+        <div class="col-12">
+            <a href="{{ url_for('admin_dashboard') }}" class="text-muted d-flex align-items-center gap-2 mb-2" id="backToDashboardLink">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+            <h1 class="heading-serif text-white" id="placeFormHeadline">{{ action }} Tourist Attraction</h1>
+        </div>
+    </div>
+
+    <!-- Edit Form Card -->
+    <div class="glass-card p-4 p-md-5" id="placeFormCard">
+        <form method="POST" id="placeRecordForm">
+            <div class="row g-4">
+                
+                <!-- Place Name -->
+                <div class="col-md-8">
+                    <label for="inputName" class="form-label text-muted" style="font-size: 0.85rem; text-transform: uppercase;">Place Name *</label>
+                    <input type="text" class="form-control form-input-premium w-100" id="inputName" name="name" value="{{ place.name if place else '' }}" placeholder="e.g. Kapaleeshwarar Temple" required>
+                </div>
+                
+                <!-- City Selection -->
+                <div class="col-md-4">
+                    <label for="selectCity" class="form-label text-muted" style="font-size: 0.85rem; text-transform: uppercase;">City *</label>
+                    <select class="form-select form-input-premium" id="selectCity" name="city" required>
+                        <option value="Chennai" {% if place and place.city == 'Chennai' %}selected{% endif %}>Chennai</option>
+                        <option value="Coimbatore" {% if place and place.city == 'Coimbatore' %}selected{% endif %}>Coimbatore</option>
+                        <option value="Kanyakumari" {% if place and place.city == 'Kanyakumari' %}selected{% endif %}>Kanyakumari</option>
+                    </select>
+                </div>
+                
+                <!-- Description -->
+                <div class="col-12">
+                    <label for="inputDesc" class="form-label text-muted" style="font-size: 0.85rem; text-transform: uppercase;">Description</label>
+                    <textarea class="form-control form-input-premium w-100" id="inputDesc" name="description" rows="4" placeholder="Brief tourist description...">{{ place.description if place else '' }}</textarea>
+                </div>
+                
+                <!-- History -->
+                <div class="col-12">
+                    <label for="inputHistory" class="form-label text-muted" style="font-size: 0.85rem; text-transform: uppercase;">Historical Context</label>
+                    <textarea class="form-control form-input-premium w-100" id="inputHistory" name="history" rows="4" placeholder="Historical significance & heritage details...">{{ place.history if place else '' }}</textarea>
+                </div>
+                
+                <!-- Specs: Fees, Opening/Closing times, Best season -->
+                <div class="col-md-3 col-sm-6">
+                    <label for="inputFee" class="form-label text-muted" style="font-size: 0.85rem; text-transform: uppercase;">Entry Fee</label>
+                    <input type="text" class="form-control form-input-premium w-100" id="inputFee" name="entry_fee" value="{{ place.entry_fee if place else 'Free' }}" placeholder="e.g. Free, ₹20">
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <label for="inputOpen" class="form-label text-muted" style="font-size: 0.85rem; text-transform: uppercase;">Opening Time</label>
+                    <input type="text" class="form-control form-input-premium w-100" id="inputOpen" name="opening_time" value="{{ place.opening_time if place else '' }}" placeholder="e.g. 05:30 AM">
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <label for="inputClose" class="form-label text-muted" style="font-size: 0.85rem; text-transform: uppercase;">Closing Time</label>
+                    <input type="text" class="form-control form-input-premium w-100" id="inputClose" name="closing_time" value="{{ place.closing_time if place else '' }}" placeholder="e.g. 09:30 PM">
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <label for="inputSeason" class="form-label text-muted" style="font-size: 0.85rem; text-transform: uppercase;">Best Visiting Season</label>
+                    <input type="text" class="form-control form-input-premium w-100" id="inputSeason" name="best_season" value="{{ place.best_season if place else '' }}" placeholder="e.g. October to March">
+                </div>
+                
+                <!-- Coordinates -->
+                <div class="col-md-6">
+                    <label for="inputLatitude" class="form-label text-muted" style="font-size: 0.85rem; text-transform: uppercase;">Latitude</label>
+                    <input type="number" step="any" class="form-control form-input-premium w-100" id="inputLatitude" name="latitude" value="{{ place.latitude if place else '0.0' }}" placeholder="e.g. 13.0339" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="inputLongitude" class="form-label text-muted" style="font-size: 0.85rem; text-transform: uppercase;">Longitude</label>
+                    <input type="number" step="any" class="form-control form-input-premium w-100" id="inputLongitude" name="longitude" value="{{ place.longitude if place else '0.0' }}" placeholder="e.g. 80.2692" required>
+                </div>
+                
+                <!-- Nearby Details -->
+                <div class="col-md-4">
+                    <label for="inputNearbyAttractions" class="form-label text-muted" style="font-size: 0.85rem; text-transform: uppercase;">Nearby Sights (comma separated)</label>
+                    <input type="text" class="form-control form-input-premium w-100" id="inputNearbyAttractions" name="nearby_attractions" value="{{ place.nearby_attractions if place else '' }}" placeholder="Sight A, Sight B">
+                </div>
+                <div class="col-md-4">
+                    <label for="inputNearbyRestaurants" class="form-label text-muted" style="font-size: 0.85rem; text-transform: uppercase;">Nearby Restaurants (comma separated)</label>
+                    <input type="text" class="form-control form-input-premium w-100" id="inputNearbyRestaurants" name="nearby_restaurants" value="{{ place.nearby_restaurants if place else '' }}" placeholder="Rest A, Rest B">
+                </div>
+                <div class="col-md-4">
+                    <label for="inputNearbyHotels" class="form-label text-muted" style="font-size: 0.85rem; text-transform: uppercase;">Nearby Hotels (comma separated)</label>
+                    <input type="text" class="form-control form-input-premium w-100" id="inputNearbyHotels" name="nearby_hotels" value="{{ place.nearby_hotels if place else '' }}" placeholder="Hotel A, Hotel B">
+                </div>
+                
+                <!-- Form Submission Buttons -->
+                <div class="col-12 mt-5 d-flex gap-3">
+                    <button type="submit" class="btn-premium" id="submitFormBtn">
+                        <i class="bi bi-check-circle-fill"></i> Save Record
+                    </button>
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn-premium-outline" id="cancelFormBtn">Cancel</a>
+                </div>
+                
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

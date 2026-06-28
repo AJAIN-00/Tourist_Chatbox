@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}AI Guide Chatbot - Tamil Nadu Tourism{% endblock %}
+
+{% block content %}
+<div class="container py-5" id="chatbotPageContainer">
+    <div class="row text-center mb-4">
+        <div class="col-12">
+            <h1 class="heading-serif mb-2 text-white" id="chatbotHeadline">AI Tourism Companion</h1>
+            <p class="text-muted" id="chatbotSubtitle">Ask me anything about Chennai, Coimbatore, or Kanyakumari</p>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <!-- Sidebar Options & Suggested Sights -->
+        <div class="col-lg-4">
+            <div class="glass-card p-4 mb-4" id="chatSettingsCard">
+                <h2 class="h5 text-white mb-3"><i class="bi bi-gear-fill text-secondary"></i> Chat Settings</h2>
+                
+                <!-- Target Language Select -->
+                <div class="mb-0">
+                    <label for="chatLanguageSelect" class="form-label text-muted" style="font-size: 0.85rem; text-transform: uppercase;">Select Guide Language</label>
+                    <select class="form-select form-input-premium" id="chatLanguageSelect" style="width: 100%;">
+                        <option value="en">🇬🇧 English</option>
+                        <option value="ta">🇮🇳 Tamil (தமிழ்)</option>
+                        <option value="hi">🇮🇳 Hindi (हिन्दी)</option>
+                        <option value="te">🇮🇳 Telugu (తెలుగు)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="glass-card p-4" id="chatSuggestionsCard">
+                <h2 class="h5 text-white mb-3"><i class="bi bi-lightbulb-fill text-secondary"></i> Suggestions to Ask</h2>
+                <div class="d-flex flex-column gap-2" id="suggestionButtonsList">
+                    <button class="btn btn-sm btn-premium-outline text-start" onclick="document.getElementById('chatInput').value='What are the must visit spots in Chennai?'; document.getElementById('chatInput').focus();" id="suggestBtn1">
+                        👉 What are the must visit spots in Chennai?
+                    </button>
+                    <button class="btn btn-sm btn-premium-outline text-start" onclick="document.getElementById('chatInput').value='Give me a brief history of the Adiyogi Statue.'; document.getElementById('chatInput').focus();" id="suggestBtn2">
+                        👉 Give me a brief history of the Adiyogi Statue.
+                    </button>
+                    <button class="btn btn-sm btn-premium-outline text-start" onclick="document.getElementById('chatInput').value='Tell me about Vivekananda Rock Memorial entry fees and ferry timings.'; document.getElementById('chatInput').focus();" id="suggestBtn3">
+                        👉 Tell me about Vivekananda Rock Memorial fees and timings.
+                    </button>
+                    <button class="btn btn-sm btn-premium-outline text-start" onclick="document.getElementById('chatInput').value='What is the best season to visit Kanyakumari?'; document.getElementById('chatInput').focus();" id="suggestBtn4">
+                        👉 What is the best season to visit Kanyakumari?
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Chat Window Area -->
+        <div class="col-lg-8">
+            <div class="glass-card chat-window d-flex flex-column" id="chatbotInterfaceWindow">
+                <!-- Chat Window Header -->
+                <div class="d-flex align-items-center justify-content-between p-3 border-bottom" style="background: rgba(255, 255, 255, 0.02);" id="chatWindowHeader">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-danger rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 44px; height: 44px;" id="botIconAvatar">
+                            <i class="bi bi-robot fs-5"></i>
+                        </div>
+                        <div>
+                            <div class="font-weight-bold text-white mb-0" style="font-size: 1.05rem;" id="botNameText">Tamil Nadu Guide BOT</div>
+                            <span class="text-success d-flex align-items-center gap-1" style="font-size: 0.8rem;" id="botOnlineStatus">
+                                <span class="bg-success rounded-circle" style="width: 7px; height: 7px; display: inline-block;"></span> Active
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Chat Messages Scroll Area -->
+                <div class="chat-body" id="chatMessages">
+                    <div class="chat-bubble chat-bubble-bot" id="chatWelcomeMessage">
+                        🙏 <strong>Vanakkam!</strong> I am your smart tourist companion for Tamil Nadu.<br><br>
+                        I can help you with travel schedules, historical details, nearby restaurants, and budgets for exploring <strong>Chennai</strong>, <strong>Coimbatore</strong>, and <strong>Kanyakumari</strong>.
+                    </div>
+                </div>
+                
+                <!-- Chat Control Inputs -->
+                <div class="chat-footer" id="chatWindowFooter">
+                    <button class="chat-mic-btn" id="voiceBtn" title="Speak into microphone" aria-label="Microphone Voice Input">
+                        <i class="bi bi-mic"></i>
+                    </button>
+                    <input type="text" class="form-control form-input-premium chat-input" id="chatInput" placeholder="Write your question about local tourism here..." aria-label="Chat query input">
+                    <button class="btn-premium py-2 px-4" style="border-radius: 12px;" id="sendBtn" title="Send message" aria-label="Send message button">
+                        <i class="bi bi-send-fill"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

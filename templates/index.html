@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Tamil Nadu Smart Tourist Guide - Discover Chennai, Coimbatore & Kanyakumari{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="container" id="homepageHeroSection">
+    <div class="hero-wrapper">
+        <h1 class="hero-headline heading-serif" id="heroHeadlineText">Discover the Soul of<br>Tamil Nadu Tourism</h1>
+        <p class="hero-sub" id="heroSubtitleText">
+            Explore rich temple architectures, pristine sandy beaches, and spiritual mountains. Ask our AI guide anything about Chennai, Coimbatore, and Kanyakumari.
+        </p>
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a href="{{ url_for('view_places') }}" class="btn-premium" id="heroExplorePlacesBtn">
+                <i class="bi bi-geo-alt-fill"></i> Explore Places
+            </a>
+            <a href="{{ url_for('view_chatbot') }}" class="btn-premium-outline" id="heroChatbotBtn">
+                <i class="bi bi-chat-dots-fill"></i> Talk to AI Guide
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="container py-5" id="featuresSection">
+    <div class="row text-center mb-5">
+        <div class="col-12">
+            <h2 class="heading-serif mb-2 text-white" id="featuresHeadline">Interactive Travel Features</h2>
+            <p class="text-muted" id="featuresSubtitle">Modern digital toolset tailored for tourists</p>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <!-- Feature 1 -->
+        <div class="col-md-4">
+            <div class="glass-card p-4 text-center h-100 glow-hover" id="featureCardChatbot">
+                <div class="fs-1 text-danger mb-3"><i class="bi bi-robot"></i></div>
+                <h3 class="h5 text-white mb-2">Multilingual AI Chatbot</h3>
+                <p class="text-muted" style="font-size: 0.95rem;">
+                    ChatGPT-style guide trained to answer queries, tell histories, and recommend spots in English, Tamil, Hindi, or Telugu.
+                </p>
+            </div>
+        </div>
+        <!-- Feature 2 -->
+        <div class="col-md-4">
+            <div class="glass-card p-4 text-center h-100 glow-hover" id="featureCardItinerary">
+                <div class="fs-1 text-warning mb-3"><i class="bi bi-calendar-event"></i></div>
+                <h3 class="h5 text-white mb-2">Itinerary Planner</h3>
+                <p class="text-muted" style="font-size: 0.95rem;">
+                    Generate structured 1, 2, or 3-day plans outlining schedules, sights, local food stalls, and costs per city.
+                </p>
+            </div>
+        </div>
+        <!-- Feature 3 -->
+        <div class="col-md-4">
+            <div class="glass-card p-4 text-center h-100 glow-hover" id="featureCardWeather">
+                <div class="fs-1 text-success mb-3"><i class="bi bi-cloud-sun"></i></div>
+                <h3 class="h5 text-white mb-2">Live Weather Alerts</h3>
+                <p class="text-muted" style="font-size: 0.95rem;">
+                    Get real-time weather readings for coordinates alongside custom clothing and travel recommendations.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Featured Cities Cards -->
+<div class="container py-5" id="featuredCitiesSection">
+    <div class="row text-center mb-5">
+        <div class="col-12">
+            <h2 class="heading-serif mb-2 text-white" id="citiesHeadline">Destinations Covered</h2>
+            <p class="text-muted" id="citiesSubtitle">Choose a city to begin your digital exploration</p>
+        </div>
+    </div>
+    
+    <div class="row g-4 justify-content-center">
+        <!-- Chennai -->
+        <div class="col-lg-4 col-md-6">
+            <div class="glass-card glow-hover h-100 d-flex flex-column" id="cityCardChennai">
+                <div class="card-img-container">
+                    <img src="https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=600&q=80" class="card-img-img" alt="Chennai">
+                    <span class="card-city-badge">🏙️ Capital</span>
+                </div>
+                <div class="p-4 d-flex flex-column flex-grow-1 justify-content-between">
+                    <div>
+                        <h3 class="h4 text-white mb-2">Chennai</h3>
+                        <p class="text-muted" style="font-size: 0.93rem;">
+                            Gateway of the South. Explore colonial historic forts, Marina Beach, and the ancient heritage of Kapaleeshwarar Temple.
+                        </p>
+                    </div>
+                    <a href="{{ url_for('view_places') }}?city=Chennai" class="btn btn-sm btn-premium mt-3 w-100" id="exploreChennaiBtn">Explore Chennai</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Coimbatore -->
+        <div class="col-lg-4 col-md-6">
+            <div class="glass-card glow-hover h-100 d-flex flex-column" id="cityCardCoimbatore">
+                <div class="card-img-container">
+                    <img src="https://images.unsplash.com/photo-1627894483216-2138af692e2e?auto=format&fit=crop&w=600&q=80" class="card-img-img" alt="Coimbatore">
+                    <span class="card-city-badge">🕉️ Spiritual</span>
+                </div>
+                <div class="p-4 d-flex flex-column flex-grow-1 justify-content-between">
+                    <div>
+                        <h3 class="h4 text-white mb-2">Coimbatore</h3>
+                        <p class="text-muted" style="font-size: 0.93rem;">
+                            The Manchester of South India. Famous for Kovai Kutralam waterfalls, Marudhamalai, and the iconic 112-foot Adiyogi Statue.
+                        </p>
+                    </div>
+                    <a href="{{ url_for('view_places') }}?city=Coimbatore" class="btn btn-sm btn-premium mt-3 w-100" id="exploreCoimbatoreBtn">Explore Coimbatore</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Kanyakumari -->
+        <div class="col-lg-4 col-md-6">
+            <div class="glass-card glow-hover h-100 d-flex flex-column" id="cityCardKanyakumari">
+                <div class="card-img-container">
+                    <img src="https://images.unsplash.com/photo-1580618672591-eb180b1a973f?auto=format&fit=crop&w=600&q=80" class="card-img-img" alt="Kanyakumari">
+                    <span class="card-city-badge">🌊 Ocean</span>
+                </div>
+                <div class="p-4 d-flex flex-column flex-grow-1 justify-content-between">
+                    <div>
+                        <h3 class="h4 text-white mb-2">Kanyakumari</h3>
+                        <p class="text-muted" style="font-size: 0.93rem;">
+                            Land's end. Witness sunsets where the three major oceans meet, and visit the Vivekananda Rock Memorial.
+                        </p>
+                    </div>
+                    <a href="{{ url_for('view_places') }}?city=Kanyakumari" class="btn btn-sm btn-premium mt-3 w-100" id="exploreKanyakumariBtn">Explore Kanyakumari</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

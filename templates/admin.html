@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Manage Sights{% endblock %}
+
+{% block content %}
+<div class="container py-5" id="adminDashboardPage">
+    <div class="row align-items-center mb-5 g-4">
+        <div class="col-sm-8 text-center text-sm-start">
+            <h1 class="heading-serif mb-2 text-white" id="adminDashboardHeadline">Management Dashboard</h1>
+            <p class="text-muted mb-0" id="adminDashboardSubtitle">Create, read, update, and delete tourist sights database records</p>
+        </div>
+        <div class="col-sm-4 text-center text-sm-end">
+            <a href="{{ url_for('admin_new_place') }}" class="btn-premium" id="addNewPlaceHeaderBtn">
+                <i class="bi bi-plus-circle-fill"></i> Add New Attraction
+            </a>
+        </div>
+    </div>
+
+    <!-- Sights Table Card -->
+    <div class="glass-card p-4 p-md-5" id="adminDashboardTableCard">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0" style="background: transparent;" id="adminPlacesTable">
+                <thead>
+                    <tr class="text-muted" style="font-size: 0.85rem; text-transform: uppercase; border-color: var(--border);">
+                        <th scope="col" style="padding: 1rem 0.5rem;" id="thID">ID</th>
+                        <th scope="col" style="padding: 1rem;" id="thName">Name</th>
+                        <th scope="col" style="padding: 1rem;" id="thCity">City</th>
+                        <th scope="col" style="padding: 1rem;" id="thSeason">Season</th>
+                        <th scope="col" style="padding: 1rem;" id="thEntry">Entry Fee</th>
+                        <th scope="col" class="text-end" style="padding: 1rem;" id="thActions">Actions</th>
+                    </tr>
+                </thead>
+                <tbody style="border-color: var(--border);">
+                    {% for place in places %}
+                    <tr style="border-color: var(--border);" id="rowPlace-{{ place.id }}">
+                        <th scope="row" class="text-muted" style="padding: 1.25rem 0.5rem;">{{ place.id }}</th>
+                        <td class="font-weight-bold text-white" style="padding: 1.25rem 1rem;">{{ place.name }}</td>
+                        <td style="padding: 1.25rem 1rem;">
+                            <span class="badge bg-secondary px-2.5 py-1.5">{{ place.city }}</span>
+                        </td>
+                        <td class="text-muted" style="padding: 1.25rem 1rem; font-size: 0.93rem;">{{ place.best_season }}</td>
+                        <td class="text-white" style="padding: 1.25rem 1rem; font-size: 0.93rem;">{{ place.entry_fee }}</td>
+                        <td class="text-end" style="padding: 1.25rem 1rem;">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a href="{{ url_for('admin_edit_place', place_id=place.id) }}" class="btn btn-sm btn-outline-warning px-3 py-1.5" style="border-radius: 8px;" id="editBtn-{{ place.id }}">
+                                    <i class="bi bi-pencil-fill"></i> Edit
+                                </a>
+                                <form method="POST" action="{{ url_for('admin_delete_place', place_id=place.id) }}" onsubmit="return confirm('Are you sure you want to delete \'{{ place.name }}\'?');" style="display: inline;" id="deleteForm-{{ place.id }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger px-3 py-1.5" style="border-radius: 8px;" id="deleteBtn-{{ place.id }}">
+                                        <i class="bi bi-trash-fill"></i> Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr id="rowNoRecords">
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="bi bi-folder-x fs-1 mb-2"></i>
+                            <p class="mb-0">No tourist sights records in the database.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

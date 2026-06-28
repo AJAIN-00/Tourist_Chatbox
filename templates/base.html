@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Tamil Nadu Smart Tourist Guide{% endblock %}</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="{% block description %}Explore the cultural highlights, historical monuments, dynamic maps, local weather, and AI chatbot guidance for Chennai, Coimbatore, and Kanyakumari.{% endblock %}">
+    <meta name="keywords" content="Tamil Nadu, Tourism, Chennai, Coimbatore, Kanyakumari, Travel Guide, AI Chatbot, Itinerary Planner">
+    <meta name="author" content="TN Smart Tourist Guide">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://img.icons8.com/color/48/temple.png">
+    
+    <!-- CDNs: Bootstrap 5, Bootstrap Icons, Google Fonts -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <!-- Radial Background Glows -->
+    <div class="bg-glow-container" id="bgGlowContainer">
+        <div class="bg-glow-1" id="bgGlowOne"></div>
+        <div class="bg-glow-2" id="bgGlowTwo"></div>
+    </div>
+
+    <!-- Navigation Header -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom py-3" id="mainNavigationBar">
+        <div class="container">
+            <a class="navbar-brand navbar-brand-custom d-flex align-items-center gap-2" href="{{ url_for('home') }}" id="navHomeLink">
+                <i class="bi bi-compass-fill"></i> TN Smart Guide
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation" id="navbarMenuToggler">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-custom {% if request.path == '/' %}active{% endif %}" href="{{ url_for('home') }}" id="navLinkHome">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-custom {% if request.path.startswith('/places') or request.path.startswith('/place/') %}active{% endif %}" href="{{ url_for('view_places') }}" id="navLinkPlaces">Explore Places</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-custom {% if request.path == '/chatbot' %}active{% endif %}" href="{{ url_for('view_chatbot') }}" id="navLinkChatbot">AI Guide</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-custom {% if request.path == '/itinerary' %}active{% endif %}" href="{{ url_for('view_itinerary') }}" id="navLinkItinerary">Itinerary Planner</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-custom {% if request.path == '/weather' %}active{% endif %}" href="{{ url_for('view_weather') }}" id="navLinkWeather">Weather Info</a>
+                    </li>
+                </ul>
+                
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Light / Dark Mode Toggle -->
+                    <button class="dark-mode-btn" id="darkModeToggle" aria-label="Toggle Dark Mode" title="Toggle Theme">
+                        <i class="bi bi-moon-stars-fill text-primary"></i>
+                    </button>
+                    
+                    {% if session.get('logged_in') %}
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-sm btn-outline-light px-3" id="adminDashboardHeaderLink">Dashboard</a>
+                        <a href="{{ url_for('admin_logout') }}" class="btn btn-sm btn-danger px-3" id="adminLogoutHeaderLink">Logout</a>
+                    {% else %}
+                        <a href="{{ url_for('admin_login') }}" class="btn btn-sm btn-outline-secondary px-3" style="border-color: var(--border-hover);" id="adminLoginHeaderLink">Admin</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <main id="mainPageContentArea">
+        <!-- Display Flash Messages -->
+        <div class="container mt-4">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, msg in messages %}
+                        <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show glass-card border-0 py-3 px-4 mb-4" role="alert" style="color: inherit;" id="alertMessage-{{ loop.index }}">
+                            <div class="d-flex align-items-center gap-2">
+                                {% if category == 'success' %}
+                                    <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                                {% elif category == 'danger' or category == 'error' %}
+                                    <i class="bi bi-exclamation-triangle-fill text-danger fs-5"></i>
+                                {% else %}
+                                    <i class="bi bi-info-circle-fill text-info fs-5"></i>
+                                {% endif %}
+                                <span>{{ msg }}</span>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer Area -->
+    <footer class="footer-custom mt-auto" id="mainPageFooter">
+        <div class="container text-center text-md-start">
+            <div class="row g-4">
+                <div class="col-md-5">
+                    <h5 class="heading-serif mb-3 text-white">🏛️ Tamil Nadu Tourism</h5>
+                    <p class="text-muted pe-md-4" style="font-size: 0.95rem; line-height: 1.6;">
+                        A smart, responsive platform dedicated to helping travelers explore the incredible heritage cities of Chennai, Coimbatore, and Kanyakumari. Supported by AI guides and multilingual translations.
+                    </p>
+                </div>
+                <div class="col-md-3">
+                    <h5 class="mb-3 text-white">Popular Cities</h5>
+                    <ul class="list-unstyled d-flex flex-column gap-2" id="footerCityLinks">
+                        <li><a href="{{ url_for('view_places') }}?city=Chennai" class="text-muted text-decoration-none" id="footerLinkChennai">Chennai Guide</a></li>
+                        <li><a href="{{ url_for('view_places') }}?city=Coimbatore" class="text-muted text-decoration-none" id="footerLinkCoimbatore">Coimbatore Guide</a></li>
+                        <li><a href="{{ url_for('view_places') }}?city=Kanyakumari" class="text-muted text-decoration-none" id="footerLinkKanyakumari">Kanyakumari Guide</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5 class="mb-3 text-white">Emergency Support</h5>
+                    <p class="text-muted mb-2" style="font-size: 0.9rem;">
+                        <i class="bi bi-telephone-fill text-danger me-2"></i> State Tourist Helpline: <strong>1800-425-4747</strong>
+                    </p>
+                    <p class="text-muted" style="font-size: 0.9rem;">
+                        <i class="bi bi-shield-fill-exclamation text-danger me-2"></i> Police Support: <strong>100</strong> | Medical: <strong>108</strong>
+                    </p>
+                </div>
+            </div>
+            <hr class="my-4" style="background-color: var(--border);">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+                <span class="text-muted" style="font-size: 0.88rem;">&copy; 2026 Tamil Nadu Smart Tourist Guide. All Rights Reserved.</span>
+                <span class="text-muted" style="font-size: 0.88rem;">Designed for Incredible India 🇮🇳</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JavaScript Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+    <!-- QRCode JS Library (qrcode.js) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Custom Application Javascript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Itinerary Planner - Customize Your Trip{% endblock %}
+
+{% block content %}
+<div class="container py-5" id="itineraryPlannerPage">
+    <div class="row text-center mb-5">
+        <div class="col-12">
+            <h1 class="heading-serif mb-2 text-white" id="itineraryHeadline">AI Trip Itinerary Planner</h1>
+            <p class="text-muted" id="itinerarySubtitle">Generate custom sightseeing guides, schedules, and budgets</p>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <!-- Input parameters form -->
+        <div class="col-lg-4">
+            <div class="glass-card p-4 p-md-5" id="itinerarySettingsCard">
+                <h2 class="h4 text-white mb-4 heading-serif border-bottom pb-2">Plan Parameters</h2>
+                
+                <form id="itineraryForm">
+                    <div class="mb-4">
+                        <label for="citySelect" class="form-label text-muted" style="font-size: 0.85rem; text-transform: uppercase;">Select City</label>
+                        <select class="form-select form-input-premium" id="citySelect" required>
+                            <option value="Chennai">🏙️ Chennai</option>
+                            <option value="Coimbatore">🕉️ Coimbatore</option>
+                            <option value="Kanyakumari">🌊 Kanyakumari</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="daysSelect" class="form-label text-muted" style="font-size: 0.85rem; text-transform: uppercase;">Number of Days</label>
+                        <select class="form-select form-input-premium" id="daysSelect" required>
+                            <option value="1">1 Day</option>
+                            <option value="2">2 Days</option>
+                            <option value="3">3 Days</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn-premium w-100 py-3" id="generateItinerarySubmitBtn">
+                        <i class="bi bi-magic"></i> Generate Itinerary
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Generated output area -->
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="h5 text-white mb-0" id="resultsAreaHeader">Itinerary Details</h3>
+                
+                <!-- Print and PDF Download Button -->
+                <button class="btn btn-sm btn-premium" id="downloadPdfBtn" style="display: none;">
+                    <i class="bi bi-file-earmark-pdf-fill"></i> Save as PDF / Print
+                </button>
+            </div>
+            
+            <div id="itineraryResult">
+                <div class="glass-card p-5 text-center" id="emptyResultPlaceholder">
+                    <div class="fs-1 text-muted mb-3"><i class="bi bi-map"></i></div>
+                    <h4 class="text-white">Your Itinerary is waiting</h4>
+                    <p class="text-muted" style="font-size: 0.95rem; max-width: 400px; margin: 0 auto;">
+                        Choose your destination city and trip length, then click Generate to create a custom travel schedule.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
