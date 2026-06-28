@@ -1,5 +1,6 @@
 import os
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
 # Setup system instruction prompt
 SYSTEM_INSTRUCTION = (
@@ -8,11 +9,6 @@ SYSTEM_INSTRUCTION = (
     "Provide history, travel tips, entry fees, best visiting time, nearby attractions, and suggested itineraries. "
     "Politely redirect unrelated questions back to tourism."
 )
-
-# Configure Gemini
-api_key = os.getenv("GEMINI_API_KEY")
-if api_key:
-    genai.configure(api_key=api_key)
 
 def chat_with_gemini(message, session_id=None):
     api_key = os.getenv("GEMINI_API_KEY")
@@ -26,29 +22,33 @@ def chat_with_gemini(message, session_id=None):
         )
 
     try:
-        # Try primary model: gemini-2.0-flash
-        try:
-            model = genai.GenerativeModel(
-                model_name="gemini-2.0-flash",
-                system_instruction=SYSTEM_INSTRUCTION
+        client = genai.Client(api_key=api_key)
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=message,
+            config=types.GenerateContentConfig(
+                system_instruction=SYSTEM_INSTRUCTION,
+                temperature=0.7,
             )
-            response = model.generate_content(message)
-            return response.text
-        except Exception as e:
-            if "not found" in str(e).lower() or "not supported" in str(e).lower():
-                print(f"gemini-2.0-flash failed: {e}. Trying gemini-1.5-flash-latest...")
-                # Fallback model: gemini-1.5-flash-latest
-                model = genai.GenerativeModel(
-                    model_name="gemini-1.5-flash-latest",
-                    system_instruction=SYSTEM_INSTRUCTION
-                )
-                response = model.generate_content(message)
-                return response.text
-            else:
-                raise e
+        )
+        return response.text
     except Exception as e:
-        print(f"All Gemini models failed: {e}")
-        return f"Error communicating with AI guide: {str(e)}"
+        print(f"Gemini API error: {e}")
+        # Try fallback model
+        try:
+            client = genai.Client(api_key=api_key)
+            response = client.models.generate_content(
+                model="gemini-1.5-flash",
+                contents=message,
+                config=types.GenerateContentConfig(
+                    system_instruction=SYSTEM_INSTRUCTION,
+                )
+            )
+            return response.text
+        except Exception as e2:
+            print(f"Fallback model also failed: {e2}")
+            return f"Error communicating with AI guide: {str(e)}"
+
 
 def generate_itinerary_prompt(city, days):
     return (
@@ -58,42 +58,47 @@ def generate_itinerary_prompt(city, days):
         "Return the output in Markdown format."
     )
 
+
 def generate_itinerary_ai(city, days):
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
-        # Fallback local itinerary generator
         return get_fallback_itinerary(city, days)
 
     try:
-        try:
-            model = genai.GenerativeModel(
-                model_name="gemini-2.0-flash",
-                system_instruction="You are a professional travel itinerary planner for Tamil Nadu."
+        client = genai.Client(api_key=api_key)
+        prompt = generate_itinerary_prompt(city, days)
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                system_instruction="You are a professional travel itinerary planner for Tamil Nadu.",
+                temperature=0.7,
             )
-            prompt = generate_itinerary_prompt(city, days)
-            response = model.generate_content(prompt)
-            return response.text
-        except Exception as e:
-            if "not found" in str(e).lower() or "not supported" in str(e).lower():
-                print(f"gemini-2.0-flash failed for itinerary: {e}. Trying gemini-1.5-flash-latest...")
-                model = genai.GenerativeModel(
-                    model_name="gemini-1.5-flash-latest",
-                    system_instruction="You are a professional travel itinerary planner for Tamil Nadu."
-                )
-                prompt = generate_itinerary_prompt(city, days)
-                response = model.generate_content(prompt)
-                return response.text
-            else:
-                raise e
+        )
+        return response.text
     except Exception as e:
-        print(f"All Gemini models failed for itinerary: {e}")
-        return f"Failed to generate itinerary using AI: {str(e)}\n\n---\n\n" + get_fallback_itinerary(city, days)
+        print(f"Gemini itinerary error: {e}")
+        try:
+            client = genai.Client(api_key=api_key)
+            prompt = generate_itinerary_prompt(city, days)
+            response = client.models.generate_content(
+                model="gemini-1.5-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction="You are a professional travel itinerary planner for Tamil Nadu.",
+                )
+            )
+            return response.text
+        except Exception as e2:
+            print(f"All Gemini models failed for itinerary: {e2}")
+            return f"Failed to generate itinerary using AI: {str(e)}\n\n---\n\n" + get_fallback_itinerary(city, days)
+
 
 def get_fallback_itinerary(city, days):
     # Dynamic mock itineraries for Chennai, Coimbatore, Kanyakumari
     city = city.title()
     days = int(days)
-    
+
     itineraries = {
         "Chennai": {
             1: (
@@ -201,5 +206,5 @@ def get_fallback_itinerary(city, days):
             )
         }
     }
-    
+
     return itineraries.get(city, {}).get(days, f"Itinerary for {city} ({days} days) is not available. Please try Chennai, Coimbatore, or Kanyakumari.")
