@@ -10,118 +10,147 @@ SYSTEM_INSTRUCTION = (
     "Politely redirect unrelated questions back to tourism."
 )
 
-# Models to try in order (most capable first)
+# Groq models to try in order (all free, fastest first)
 MODELS_TO_TRY = [
-    "gemini-1.5-flash",
-    "gemini-1.5-flash-latest",
-    "gemini-2.0-flash",
-    "gemini-1.5-pro-latest",
+    "llama-3.1-8b-instant",
+    "llama-3.3-70b-versatile",
+    "mixtral-8x7b-32768",
+    "gemma2-9b-it",
 ]
 
+GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
-def call_gemini_api(api_key, model, message, system_instruction=None, retries=2):
-    """Call Gemini REST API, testing both v1 and v1beta API endpoints."""
-    # We try v1 (stable) first, then v1beta
-    api_versions = ["v1", "v1beta"]
-    
+
+def call_groq_api(api_key, model, message, system_instruction=None, retries=3):
+    """Call Groq REST API (OpenAI-compatible) to get a chat response."""
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}"
+    }
+
+    messages = []
+    if system_instruction:
+        messages.append({"role": "system", "content": system_instruction})
+    messages.append({"role": "user", "content": message})
+
+    body = {
+        "model": model,
+        "messages": messages,
+        "temperature": 0.7,
+        "max_tokens": 2048,
+    }
+
     last_error_msg = ""
-    for version in api_versions:
-        url = f"https://generativelanguage.googleapis.com/{version}/models/{model}:generateContent"
-        headers = {"Content-Type": "application/json"}
-        params = {"key": api_key}
+    for attempt in range(retries):
+        try:
+            response = requests.post(
+                GROQ_API_URL, headers=headers, json=body, timeout=30
+            )
 
-        body = {
-            "contents": [
-                {"role": "user", "parts": [{"text": message}]}
-            ],
-            "generationConfig": {
-                "temperature": 0.7,
-                "maxOutputTokens": 2048
-            }
-        }
+            if response.status_code == 429:
+                wait_time = 2 ** attempt
+                print(f"[Groq] Rate limited on {model} (attempt {attempt+1}). Waiting {wait_time}s...")
+                time.sleep(wait_time)
+                continue
 
-        if system_instruction:
-            body["system_instruction"] = {
-                "parts": [{"text": system_instruction}]
-            }
+            if response.status_code in (400, 404):
+                try:
+                    err_msg = response.json().get("error", {}).get("message", response.text)
+                except Exception:
+                    err_msg = response.text
+                raise Exception(f"Model {model} error: {err_msg[:200]}")
 
-        for attempt in range(retries):
-            try:
-                response = requests.post(
-                    url, headers=headers, params=params, json=body, timeout=25
-                )
+            if response.status_code == 401:
+                raise Exception("Invalid Groq API key. Please check your GROQ_API_KEY.")
 
-                if response.status_code == 429:
-                    # Rate limited — wait and retry
-                    wait_time = 2 ** attempt
-                    print(f"Rate limited on {model} {version} (attempt {attempt+1}). Waiting {wait_time}s...")
-                    time.sleep(wait_time)
-                    continue
+            response.raise_for_status()
+            data = response.json()
 
-                if response.status_code == 404:
-                    # Model/Version combination not supported, try next version
-                    last_error_msg = f"{model} returned 404 on {version}"
-                    break
+            choices = data.get("choices", [])
+            if not choices:
+                raise Exception(f"No choices returned from {model}")
 
-                response.raise_for_status()
-                data = response.json()
-                return data["candidates"][0]["content"]["parts"][0]["text"]
+            return choices[0]["message"]["content"]
 
-            except requests.exceptions.HTTPError as e:
-                if e.response is not None:
-                    if e.response.status_code == 404:
-                        last_error_msg = f"{model} returned 404 on {version}"
-                        break  # Break attempt loop to try next API version
-                    try:
-                        err_detail = e.response.json().get("error", {}).get("message", e.response.text)
-                    except Exception:
-                        err_detail = e.response.text
-                    last_error_msg = f"HTTP Error {e.response.status_code}: {err_detail}"
-                else:
-                    last_error_msg = str(e)
-                
-                if attempt == retries - 1:
-                    break
+        except requests.exceptions.Timeout:
+            last_error_msg = f"Request to {model} timed out"
+            if attempt < retries - 1:
                 time.sleep(1)
-            except Exception as e:
+        except requests.exceptions.ConnectionError as e:
+            last_error_msg = f"Connection error: {str(e)[:100]}"
+            if attempt < retries - 1:
+                time.sleep(2)
+        except requests.exceptions.HTTPError as e:
+            if e.response is not None:
+                try:
+                    err_detail = e.response.json().get("error", {}).get("message", e.response.text)
+                except Exception:
+                    err_detail = e.response.text
+                last_error_msg = f"HTTP {e.response.status_code}: {err_detail[:200]}"
+            else:
                 last_error_msg = str(e)
-                if attempt == retries - 1:
-                    break
+            if attempt < retries - 1:
                 time.sleep(1)
+        except Exception as e:
+            last_error_msg = str(e)
+            break  # Non-retryable error
 
-    raise Exception(last_error_msg or f"Failed to call {model} on all API versions")
+    raise Exception(last_error_msg or f"Failed to call {model}")
 
 
 def chat_with_gemini(message, session_id=None):
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        return (
-            "Hello! I am your Tamil Nadu Tourist Guide. "
-            "(Note: The Gemini API key is not configured. Please add your GEMINI_API_KEY to environment variables.)\n\n"
-            "I can help you explore Marina Beach in Chennai, Isha Yoga Center in Coimbatore, or "
-            "Vivekananda Rock Memorial in Kanyakumari. What details can I share with you?"
-        )
+    """Send a chat message to Groq AI and return the response.
+    Function name kept as chat_with_gemini for backward compatibility."""
+    api_key = os.getenv("GROQ_API_KEY", "").strip()
+
+    if not api_key or api_key == "your_groq_api_key_here":
+        print("[Groq] WARNING: GROQ_API_KEY not configured!")
+        return get_no_key_response()
 
     last_error = None
     for model in MODELS_TO_TRY:
         try:
-            print(f"Trying model: {model}")
-            result = call_gemini_api(api_key, model, message, SYSTEM_INSTRUCTION)
-            print(f"Success with model: {model}")
+            print(f"[Groq] Trying model: {model}")
+            result = call_groq_api(api_key, model, message, SYSTEM_INSTRUCTION)
+            print(f"[Groq] ✅ Success with model: {model}")
             return result
         except Exception as e:
             err_str = str(e)
-            print(f"Failed model {model}: {err_str[:150]}")
+            print(f"[Groq] ❌ Failed model {model}: {err_str[:200]}")
             last_error = err_str
             continue
 
-    # All models failed — return friendly message with debug info for admin if logged in
-    # (Hiding key from output for security)
-    print(f"All Gemini models failed. Last error: {last_error}")
-    
+    print(f"[Groq] All models failed. Last error: {last_error}")
+    return get_fallback_response(last_error)
+
+
+def get_no_key_response():
+    """Response when no API key is configured."""
     return (
-        "⚠️ The AI guide is temporarily unavailable. Please try again in a moment.\n\n"
+        "🙏 Vanakkam! I am your Tamil Nadu Tourist Guide Bot.\n\n"
+        "⚠️ **Setup Required**: Please add your `GROQ_API_KEY` to the `.env` file.\n"
+        "Get a **free** key at: https://console.groq.com/keys\n\n"
         "🏖️ **Chennai**: Marina Beach, Fort St. George, Kapaleeshwarar Temple\n"
+        "🧘 **Coimbatore**: Isha Yoga Center, Adiyogi Statue, Marudhamalai Temple\n"
+        "🌊 **Kanyakumari**: Vivekananda Rock Memorial, Thiruvalluvar Statue, Sunrise/Sunset views"
+    )
+
+
+def get_fallback_response(error=None):
+    """Friendly fallback when all Groq models fail."""
+    error_hint = ""
+    if error:
+        if "401" in error or "invalid" in error.lower():
+            error_hint = "\n\n💡 **Tip**: Your API key is invalid. Get a free key at https://console.groq.com/keys"
+        elif "429" in error or "quota" in error.lower() or "rate" in error.lower():
+            error_hint = "\n\n💡 **Tip**: Rate limit hit. Please wait a moment and try again."
+        elif "timed out" in error.lower() or "connection" in error.lower():
+            error_hint = "\n\n💡 **Tip**: Network issue detected. Please check your internet connection."
+
+    return (
+        "⚠️ The AI guide is temporarily unavailable. Please try again in a moment."
+        + error_hint +
+        "\n\n🏖️ **Chennai**: Marina Beach, Fort St. George, Kapaleeshwarar Temple\n"
         "🧘 **Coimbatore**: Isha Yoga Center, Adiyogi Statue, Marudhamalai Temple\n"
         "🌊 **Kanyakumari**: Vivekananda Rock Memorial, Thiruvalluvar Statue, Sunrise/Sunset views"
     )
@@ -137,8 +166,8 @@ def generate_itinerary_prompt(city, days):
 
 
 def generate_itinerary_ai(city, days):
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
+    api_key = os.getenv("GROQ_API_KEY", "").strip()
+    if not api_key or api_key == "your_groq_api_key_here":
         return get_fallback_itinerary(city, days)
 
     system = "You are a professional travel itinerary planner for Tamil Nadu."
@@ -146,7 +175,7 @@ def generate_itinerary_ai(city, days):
 
     for model in MODELS_TO_TRY:
         try:
-            result = call_gemini_api(api_key, model, prompt, system)
+            result = call_groq_api(api_key, model, prompt, system)
             return result
         except Exception:
             continue
